@@ -1,28 +1,40 @@
 import {promises as fs} from 'fs';
-import {Message} from './types';
+import {Message, MessageWithoutDatetime} from './types';
 
-const path = '../messages';
+const path = './messages';
 let data: Message[] = [];
 
 const fileDb = {
   async init() {
     try {
       const files = await fs.readdir(path);
-      for (const file of files) {
-        const apiMessage = await fs.readFile(`${path}/${file}`);
-        const message: Message = await JSON.parse(apiMessage.toString());
-        data.push(message);
+
+      if (files.length === 0) {
+        return data = [];
       }
+
+      data = await Promise.all(files.map(async (file): Promise<Message> => {
+        const data = await fs.readFile(`${path}/${file}`);
+        return JSON.parse(data.toString());
+      }));
+
     } catch (e) {
       console.error(e);
       data = [];
     }
   },
   async getItems() {
-    return data.reverse().slice(0, 5);
+    return data.slice(-5)
   },
-  async addMessage(message: Message) {
+  async addMessage(item: MessageWithoutDatetime) {
+    const message: Message = {
+      message: item.message,
+      datetime: Date(),
+    }
+
     await fs.writeFile(`${path}/${message.datetime}`, JSON.stringify(message));
+    await this.init();
+    return message;
   },
 };
 
