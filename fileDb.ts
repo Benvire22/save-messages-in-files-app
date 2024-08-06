@@ -23,18 +23,26 @@ const fileDb = {
       data = [];
     }
   },
-  async getItems() {
-    return data.slice(-5)
-  },
-  async addMessage(item: MessageWithoutDatetime) {
-    const message: Message = {
-      message: item.message,
-      datetime: Date(),
-    }
 
-    await fs.writeFile(`${path}/${message.datetime}`, JSON.stringify(message));
-    await this.init();
-    return message;
+  async getItems() {
+    return data.slice(-5);
+  },
+
+  async addMessage(item: MessageWithoutDatetime) {
+    try {
+      const message: Message = {
+        message: item.message,
+        datetime: new Date().toISOString(),
+      };
+
+      await fs.writeFile(`${path}/${message.datetime}.txt`, JSON.stringify(message));
+      await this.init();
+
+      return message;
+    } catch (e) {
+      console.error(e);
+      return 'Invalid message';
+    }
   },
 };
 
